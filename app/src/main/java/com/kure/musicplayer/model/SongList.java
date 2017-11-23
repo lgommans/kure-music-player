@@ -11,6 +11,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 /**
  * Global interface to all the songs this application can see.
@@ -105,6 +107,9 @@ public class SongList {
 	 * - "both"     To scan for songs anywhere.
 	 */
 	public void scanSongs(Context c, String fromWhere) {
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+		String songFilter = prefs.getString("songFilter", "");
 
 		// This is a rather complex function that interacts with
 		// the underlying Android database.
@@ -252,9 +257,15 @@ public class SongList {
 			//       No way I'm releasing it this way - I have like 4.260 songs!
 
 			do {
+				String path = cursor.getString(cursor.getColumnIndex(SONG_FILEPATH));
+				if (songFilter != "") {
+					if ( ! path.contains(songFilter)) {
+						continue;
+					}
+				}
 				// Creating a song from the values on the row
 				Song song = new Song(cursor.getInt(cursor.getColumnIndex(SONG_ID)),
-						             cursor.getString(cursor.getColumnIndex(SONG_FILEPATH)));
+						             path);
 
 				song.setTitle      (cursor.getString(cursor.getColumnIndex(SONG_TITLE)));
 				song.setArtist     (cursor.getString(cursor.getColumnIndex(SONG_ARTIST)));
